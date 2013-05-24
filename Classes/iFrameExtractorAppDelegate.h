@@ -37,9 +37,16 @@
 @property (nonatomic, retain) IBOutlet UILabel *label;
 @property (nonatomic, retain) IBOutlet UIButton *playButton;
 @property (nonatomic, retain) VideoFrameExtractor *video;
+@property (retain, nonatomic) IBOutlet UIButton *RecordButton;
+@property (retain, nonatomic) IBOutlet UIButton *SnapShotButton;
 
 -(IBAction)playButtonAction:(id)sender;
 - (IBAction)showTime:(id)sender;
+
+// 20130524 albert.liao modified start
+- (IBAction)SnapShotButtonAction:(id)sender;
+- (IBAction)RecordButtionAction:(id)sender;
+// 20130524 albert.liao modified end
 
 @end
 

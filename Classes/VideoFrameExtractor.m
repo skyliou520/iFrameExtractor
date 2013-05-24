@@ -20,6 +20,38 @@
 
 @synthesize outputWidth, outputHeight;
 
+
+// 20130524 albert.liao modified start
+- (void) SnapShot_AlertView:(NSError *)error
+{
+    UIAlertView *alert=nil;
+    
+    if (error)
+    {
+        // TODO: display different error message
+        alert = [[UIAlertView alloc] initWithTitle:@"Warning"
+                                           message:@"The Storage is full!\nFail to save captured image!"
+                                          delegate:self cancelButtonTitle:@"Ok"
+                                 otherButtonTitles:nil];
+    }
+    else // All is well
+    {
+        alert = [[UIAlertView alloc] initWithTitle:@"Success"
+                                           message:@"Image Has been captured in Camera Roll successfully"
+                                          delegate:self cancelButtonTitle:@"Ok"
+                                 otherButtonTitles:nil];
+    }
+    [alert show];
+    alert = nil;
+}
+
+
+- (void)image:(UIImage *)image didFinishSavingWithError:(NSError *)error contextInfo:(void *)contextInfo
+{
+    [self SnapShot_AlertView:error];
+}
+// 20130524 albert.liao modified end
+
 -(void)setOutputWidth:(int)newValue {
 	if (outputWidth == newValue) return;
 	outputWidth = newValue;
@@ -35,6 +67,35 @@
 -(UIImage *)currentImage {
 	if (!pFrame->data[0]) return nil;
 	[self convertFrameToRGB];
+    
+    // 20130524 albert.liao modified start
+    // Save the image and clear the bSnapShot flag
+    if(self.bSnapShot==YES)
+    {
+        UIImage *myimg=nil;
+        AVPicture picture_tmp;
+        struct SwsContext *img_convert_ctx_tmp;
+        avpicture_alloc(&picture_tmp, PIX_FMT_RGB24, pFrame->width, pFrame->height);
+        img_convert_ctx_tmp = sws_getContext(pCodecCtx->width,
+                                             pCodecCtx->height,
+                                             pCodecCtx->pix_fmt,
+                                             pFrame->width,
+                                             pFrame->height,
+                                             PIX_FMT_RGB24,
+                                             SWS_FAST_BILINEAR, NULL, NULL, NULL);
+        
+        sws_scale (img_convert_ctx_tmp, (const uint8_t **)pFrame->data, pFrame->linesize,
+                   0, pCodecCtx->height,
+                   picture_tmp.data, picture_tmp.linesize);
+        
+        myimg = [self imageFromAVPicture:picture_tmp width:pFrame->width height:pFrame->height];
+        
+        UIImageWriteToSavedPhotosAlbum(myimg, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
+        
+        self.bSnapShot = NO;
+    }
+    // 20130524 albert.liao modified end    
+    
 	return [self imageFromAVPicture:picture width:outputWidth height:outputHeight];
 }
 
@@ -63,7 +124,11 @@
     // Register all formats and codecs
     avcodec_register_all();
     av_register_all();
-	
+    
+    // 20130524 albert.liao modified start
+	avformat_network_init();
+    // 20130524 albert.liao modified end
+    
     // Open video file
     if(avformat_open_input(&pFormatCtx, [moviePath cStringUsingEncoding:NSASCIIStringEncoding], NULL, NULL) != 0) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't open file\n");

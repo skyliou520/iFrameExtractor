@@ -64,5 +64,9 @@
 /* Seek to closest keyframe near specified time */
 -(void)seekTime:(double)seconds;
 
+// 20130524 albert.liao modified start
+@property (nonatomic) BOOL bSnapShot;
+- (void) SnapShot_AlertView:(NSError *)error;
+// 20130524 albert.liao modified end
 
 @end

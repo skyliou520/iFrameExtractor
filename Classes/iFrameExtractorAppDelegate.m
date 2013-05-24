@@ -33,12 +33,18 @@
 	[label release];
 	[playButton release];
     [window release];
+    [_RecordButton release];
+    [_SnapShotButton release];
     [super dealloc];
 }
 
-- (void)applicationDidFinishLaunching:(UIApplication *)application {    
-	self.video = [[VideoFrameExtractor alloc] initWithVideo:[Utilities bundlePath:@"sophie.mov"]];
-	[video release];
+- (void)applicationDidFinishLaunching:(UIApplication *)application {
+    
+    // 20130524 albert.liao modified start
+	//self.video = [[VideoFrameExtractor alloc] initWithVideo:[Utilities bundlePath:@"sophie.mov"]];
+	self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h800.mp4"];
+    // 20130524 albert.liao modified end
+    [video release];
 
 	// set output image size
 	video.outputWidth = 426;
@@ -69,6 +75,13 @@
 
 - (IBAction)showTime:(id)sender {
     NSLog(@"current time: %f s",video.currentTime);
+}
+
+- (IBAction)SnapShotButtonAction:(id)sender {
+    self.video.bSnapShot = YES;
+}
+
+- (IBAction)RecordButtionAction:(id)sender {
 }
 
 #define LERP(A,B,C) ((A)*(1.0-C)+(B)*C)
