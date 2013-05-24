@@ -22,6 +22,10 @@
 
 
 // 20130524 albert.liao modified start
+
+// 20130524 albert.liao modified start
+@synthesize bSnapShot, veVideoRecordState;
+
 - (void) SnapShot_AlertView:(NSError *)error
 {
     UIAlertView *alert=nil;
@@ -236,14 +240,81 @@ initError:
         if(packet.stream_index==videoStream) {
             // Decode video frame
             avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
+        
+
+            // 20130525 albert.liao modified start
+            fprintf(stderr, "video packet len=%d, 1st Byte=%02X\n",packet.size, packet.data[0]);
+            // Initialize a new format context for writing file
+            if(veVideoRecordState!=eH264RecIdle)
+            {
+                switch(veVideoRecordState)
+                {
+                    case eH264RecInit:
+                    {
+                        if ( !pFormatCtx_Record )
+                        {
+                            int bFlag = 0;
+                            pFormatCtx_Record = avformat_alloc_context();
+                            bFlag = h264_file_create( pFormatCtx_Record, pCodecCtx, packet.data, packet.size );
+                            if(bFlag==1)
+                            {
+                                veVideoRecordState = eH264RecActive;
+                            }
+                            else
+                            {
+                                veVideoRecordState = eH264RecIdle;
+                            }
+                        }
+                    }
+                    break;
+                        
+                    case eH264RecActive:
+                    {
+                        if ( pFormatCtx_Record )
+                        {
+                            h264_file_write_frame( pFormatCtx_Record, packet.data, packet.size );
+                        }
+                        else
+                        {
+                            NSLog(@"pFormatCtx_Record no exist");
+                        }
+                    }
+                    break;
+                        
+                    case eH264RecClose:
+                    {
+                        if ( pFormatCtx_Record )
+                        {
+                            h264_file_close(pFormatCtx_Record);
+                            pFormatCtx_Record = NULL;
+                        }
+                        else
+                        {
+                            NSLog(@"fc no exist");
+                        }
+                        veVideoRecordState = eH264RecIdle;
+                    }
+                    break;
+                        
+                    default:
+                        if ( pFormatCtx_Record )
+                        {
+                            h264_file_close(pFormatCtx_Record);
+                            pFormatCtx_Record = NULL;
+                        }
+                        NSLog(@"[ERROR] unexpected veVideoRecordState!!");
+                        veVideoRecordState = eH264RecIdle;
+                        break;
+                }
+            }
         }
-		
+        // 20130525 albert.liao modified end
 	}
 	return frameFinished!=0;
 }
 
 -(void)convertFrameToRGB {	
-	sws_scale (img_convert_ctx, pFrame->data, pFrame->linesize,
+	sws_scale (img_convert_ctx, (const uint8_t **)pFrame->data, pFrame->linesize,
 			   0, pCodecCtx->height,
 			   picture.data, picture.linesize);	
 }

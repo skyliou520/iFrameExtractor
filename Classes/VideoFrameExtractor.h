@@ -25,6 +25,10 @@
 #include "libavformat/avformat.h"
 #include "libswscale/swscale.h"
 
+// 20130525 albert.liao modified start
+#include "H264_Save.h"
+// 20130525 albert.liao modified end
+
 @interface VideoFrameExtractor : NSObject {
 	AVFormatContext *pFormatCtx;
 	AVCodecContext *pCodecCtx;
@@ -38,6 +42,10 @@
 	UIImage *currentImage;
 	double duration;
     double currentTime;
+    
+    // 20130524 albert.liao modified start
+    AVFormatContext *pFormatCtx_Record;
+    // 20130524 albert.liao modified end
 }
 
 /* Last decoded picture as UIImage */
@@ -66,7 +74,8 @@
 
 // 20130524 albert.liao modified start
 @property (nonatomic) BOOL bSnapShot;
-- (void) SnapShot_AlertView:(NSError *)error;
+@property (nonatomic) int veVideoRecordState;
+- (void) SnapShot_AlertView:(NSError *)error;               
 // 20130524 albert.liao modified end
 
 @end
