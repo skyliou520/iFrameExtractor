@@ -36,6 +36,7 @@
     AVPacket packet;
 	AVPicture picture;
 	int videoStream;
+    int audioStream;
 	struct SwsContext *img_convert_ctx;
 	int sourceWidth, sourceHeight;
 	int outputWidth, outputHeight;

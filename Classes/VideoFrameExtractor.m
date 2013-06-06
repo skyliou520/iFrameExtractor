@@ -123,7 +123,7 @@
 -(id)initWithVideo:(NSString *)moviePath {
 	if (!(self=[super init])) return nil;
  
-    AVCodec         *pCodec;
+    AVCodec         *pCodec, *pCodecAudio;
 		
     // Register all formats and codecs
     avcodec_register_all();
@@ -134,11 +134,15 @@
     // 20130524 albert.liao modified end
     
     // Open video file
+    AVDictionary *opts = 0;
+    int ret = av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+    
     if(avformat_open_input(&pFormatCtx, [moviePath cStringUsingEncoding:NSASCIIStringEncoding], NULL, NULL) != 0) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't open file\n");
         goto initError;
     }
-	
+	av_dict_free(&opts);
+    
     // Retrieve stream information
     if(avformat_find_stream_info(pFormatCtx,NULL) < 0) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't find stream information\n");
@@ -151,6 +155,11 @@
         goto initError;
     }
 	
+    if ((audioStream =  av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, &pCodecAudio, 0)) < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Cannot find a video stream in the input file\n");
+        goto initError;
+    }
+    
     // Get a pointer to the codec context for the video stream
     pCodecCtx = pFormatCtx->streams[videoStream]->codec;
     
@@ -238,12 +247,17 @@ initError:
     while(!frameFinished && av_read_frame(pFormatCtx, &packet)>=0) {
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
+            
+            
+            // 20130525 albert.liao modified start
+//            fprintf(stderr, "packet len=%d, Byte=%02X%02X%02X%02X%02X, State=%d\n",\
+                    packet.size, packet.data[0],packet.data[1],packet.data[2],packet.data[3], packet.data[4],veVideoRecordState);
+            
             // Decode video frame
             avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
         
 
-            // 20130525 albert.liao modified start
-            fprintf(stderr, "video packet len=%d, 1st Byte=%02X\n",packet.size, packet.data[0]);
+
             // Initialize a new format context for writing file
             if(veVideoRecordState!=eH264RecIdle)
             {
@@ -254,15 +268,19 @@ initError:
                         if ( !pFormatCtx_Record )
                         {
                             int bFlag = 0;
+                            
                             pFormatCtx_Record = avformat_alloc_context();
-                            bFlag = h264_file_create( pFormatCtx_Record, pCodecCtx, packet.data, packet.size );
-                            if(bFlag==1)
+                            bFlag = h264_file_create( pFormatCtx_Record, pCodecCtx,/*fps*/0.0, packet.data, packet.size );
+                            
+                            if(bFlag==true)
                             {
                                 veVideoRecordState = eH264RecActive;
+                                fprintf(stderr, "h264_file_create success\n");                                
                             }
                             else
                             {
                                 veVideoRecordState = eH264RecIdle;
+                                fprintf(stderr, "h264_file_create error\n");
                             }
                         }
                     }
@@ -272,7 +290,7 @@ initError:
                     {
                         if ( pFormatCtx_Record )
                         {
-                            h264_file_write_frame( pFormatCtx_Record, packet.data, packet.size );
+                            h264_file_write_frame( pFormatCtx_Record, packet.data, packet.size, packet.dts, packet.pts);
                         }
                         else
                         {
@@ -287,6 +305,7 @@ initError:
                         {
                             h264_file_close(pFormatCtx_Record);
                             pFormatCtx_Record = NULL;
+                            NSLog(@"h264_file_close() is finished");
                         }
                         else
                         {
@@ -307,6 +326,15 @@ initError:
                         break;
                 }
             }
+        }
+        else if(packet.stream_index==audioStream)
+        {
+            ;
+        }
+        else
+        {
+            fprintf(stderr, "packet len=%d, Byte=%02X%02X%02X%02X%02X\n",\
+                    packet.size, packet.data[0],packet.data[1],packet.data[2],packet.data[3], packet.data[4]);
         }
         // 20130525 albert.liao modified end
 	}

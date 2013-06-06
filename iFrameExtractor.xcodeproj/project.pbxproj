@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 45;
+	objectVersion = 46;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -28,6 +28,8 @@
 		288765FD0DF74451002DB57D /* CoreGraphics.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 288765FC0DF74451002DB57D /* CoreGraphics.framework */; };
 		28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
 		9A95E74D174F11D7008EB183 /* libiconv.2.4.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */; };
+		9A95E74F174F5AA6008EB183 /* H264_Save.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A95E74E174F5AA6008EB183 /* H264_Save.m */; };
+		9A95E752174F5B36008EB183 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9A95E751174F5B36008EB183 /* Default-568h@2x.png */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -58,6 +60,9 @@
 		32CA4F630368D1EE00C91783 /* iFrameExtractor_Prefix.pch */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = iFrameExtractor_Prefix.pch; sourceTree = "<group>"; };
 		8D1107310486CEB800E47090 /* iFrameExtractor-Info.plist */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = text.plist.xml; path = "iFrameExtractor-Info.plist"; plistStructureDefinitionIdentifier = "com.apple.xcode.plist.structure-definition.iphone.info-plist"; sourceTree = "<group>"; };
 		9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.2.4.0.dylib; path = usr/lib/libiconv.2.4.0.dylib; sourceTree = SDKROOT; };
+		9A95E74E174F5AA6008EB183 /* H264_Save.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264_Save.m; sourceTree = "<group>"; };
+		9A95E750174F5AC0008EB183 /* H264_Save.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = H264_Save.h; sourceTree = "<group>"; };
+		9A95E751174F5B36008EB183 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -94,6 +99,8 @@
 				0921E14010FADAFB004EAA40 /* Utilities.m */,
 				0921E14410FADB97004EAA40 /* VideoFrameExtractor.h */,
 				0921E14510FADB97004EAA40 /* VideoFrameExtractor.m */,
+				9A95E74E174F5AA6008EB183 /* H264_Save.m */,
+				9A95E750174F5AC0008EB183 /* H264_Save.h */,
 			);
 			path = Classes;
 			sourceTree = "<group>";
@@ -124,8 +131,9 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
-				9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */,
 				0918E6C310F839A300300130 /* ffmpeg */,
+				9A95E751174F5B36008EB183 /* Default-568h@2x.png */,
+				9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -192,8 +200,11 @@
 /* Begin PBXProject section */
 		29B97313FDCFA39411CA2CEA /* Project object */ = {
 			isa = PBXProject;
+			attributes = {
+				LastUpgradeCheck = 0460;
+			};
 			buildConfigurationList = C01FCF4E08A954540054247B /* Build configuration list for PBXProject "iFrameExtractor" */;
-			compatibilityVersion = "Xcode 3.1";
+			compatibilityVersion = "Xcode 3.2";
 			developmentRegion = English;
 			hasScannedForEncodings = 1;
 			knownRegions = (
@@ -216,6 +227,7 @@
 				28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */,
 				0918E6D110F839FC00300130 /* sophie.mov in Resources */,
 				09F1D692110ED3AA00F50511 /* Default.png in Resources */,
+				9A95E752174F5B36008EB183 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -230,6 +242,7 @@
 				1D3623260D0F684500981E51 /* iFrameExtractorAppDelegate.m in Sources */,
 				0921E14110FADAFB004EAA40 /* Utilities.m in Sources */,
 				0921E14610FADB97004EAA40 /* VideoFrameExtractor.m in Sources */,
+				9A95E74F174F5AA6008EB183 /* H264_Save.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -253,7 +266,8 @@
 					"\"$(SRCROOT)/ffmpeg/compiled/i386/lib\"",
 				);
 				PRODUCT_NAME = iFrameExtractor;
-				SDKROOT = iphoneos5.1;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Debug;
 		};
@@ -272,7 +286,8 @@
 					"\"$(SRCROOT)/ffmpeg/compiled/i386/lib\"",
 				);
 				PRODUCT_NAME = iFrameExtractor;
-				SDKROOT = iphoneos5.1;
+				SDKROOT = iphoneos;
+				TARGETED_DEVICE_FAMILY = 1;
 			};
 			name = Release;
 		};
@@ -285,8 +300,8 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = ./ffmpeg;
-				PREBINDING = NO;
-				SDKROOT = iphoneos4.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				SDKROOT = iphoneos;
 			};
 			name = Debug;
 		};
@@ -299,8 +314,8 @@
 				GCC_WARN_ABOUT_RETURN_TYPE = YES;
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = ./ffmpeg;
-				PREBINDING = NO;
-				SDKROOT = iphoneos4.0;
+				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				SDKROOT = iphoneos;
 			};
 			name = Release;
 		};

@@ -27,6 +27,9 @@
 #include "H264_Save.h"
 // 20130525 albert.liao modified end
 
+#define RECORDING_AT_RTSP_START 0
+//#define RECORDING_AT_RTSP_START 1
+
 @implementation iFrameExtractorAppDelegate
 
 @synthesize window, imageView, label, playButton, video;
@@ -43,10 +46,12 @@
 }
 
 - (void)applicationDidFinishLaunching:(UIApplication *)application {
-    
+
     // 20130524 albert.liao modified start
-	self.video = [[VideoFrameExtractor alloc] initWithVideo:[Utilities bundlePath:@"sophie.mov"]];
-	//self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h800.mp4"];
+    // The test file url is http://http://mm2.pcslab.com/mm/
+//    self.video = [[VideoFrameExtractor alloc] initWithVideo:[Utilities bundlePath:@"7h800.mp4"]];
+	self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h800.mp4"];
+    
     // 20130524 albert.liao modified end
     [video release];
 
@@ -70,6 +75,18 @@
 	// seek to 0.0 seconds
 	[video seekTime:0.0];
 
+    // 20130529 temprary test start
+
+#if RECORDING_AT_RTSP_START==1
+    self.video.veVideoRecordState = eH264RecInit;
+	[NSTimer scheduledTimerWithTimeInterval:10.0
+									 target:self
+								   selector:@selector(StopRecording:)
+								   userInfo:nil
+									repeats:NO];
+#endif
+    // 20130529 temprary test end
+    
 	[NSTimer scheduledTimerWithTimeInterval:1.0/30
 									 target:self
 								   selector:@selector(displayNextFrame:)
@@ -88,6 +105,7 @@
 
 -(void)StopRecording:(NSTimer *)timer {
     self.video.veVideoRecordState = eH264RecClose;
+    NSLog(@"eH264RecClose");
     [timer invalidate];
 }
 
@@ -95,7 +113,7 @@
 - (IBAction)RecordButtionAction:(id)sender {
     self.video.veVideoRecordState = eH264RecInit;
     
-	[NSTimer scheduledTimerWithTimeInterval:2.0
+	[NSTimer scheduledTimerWithTimeInterval:5.0//2.0
 									 target:self
 								   selector:@selector(StopRecording:)
 								   userInfo:nil

@@ -6,6 +6,7 @@
 //
 //
 
+// Reference ffmpeg\doc\examples\muxing.c
 #include <stdio.h>
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
@@ -15,7 +16,7 @@ int vStreamIdx = -1, waitkey = 1;
 
 #if 1
 // Read nal type from RTP payload
-static int get_nal_type( void *p, int len )
+static int get_nal_type( const void *p, int len )
 {
     unsigned char *b = (unsigned char*)p;
     
@@ -91,15 +92,21 @@ void h264_file_close(AVFormatContext *fc)
 
 
 // Since the data may not from ffmpeg as AVPacket format
-void h264_file_write_frame(AVFormatContext *fc, const void* p, int len )
+void h264_file_write_frame(AVFormatContext *fc, const void* p, int len, int dts, int pts )
 {
     AVStream *pst = NULL;
-    
+    int vNalType = 0;
     if ( 0 > vStreamIdx )
         return;
     
     pst = fc->streams[ vStreamIdx ];
     
+    // TODO: copy sps and pss to generate AVCC container box
+    vNalType = get_nal_type(p, len ) ;
+    if ( (vNalType==0x67) || (vNalType==0x68))
+    {
+        fprintf(stderr, "\ngot SPS\n");
+    }
     // Init packet
     AVPacket pkt;
     av_init_packet( &pkt );
@@ -125,19 +132,29 @@ void h264_file_write_frame(AVFormatContext *fc, const void* p, int len )
     }
     
     // TODO: check here
+#if 1
     pkt.dts = AV_NOPTS_VALUE;
     pkt.pts = AV_NOPTS_VALUE;
-    
+#else
+    pkt.dts = dts;
+    pkt.pts = pts;
+#endif
+    //fprintf(stderr, "dts=%d, pts=%d\n",dts,pts);
     // Should we add 0x000001 ourself ??
     av_interleaved_write_frame( fc, &pkt );
 }
 
 
-int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, void *p, int len )
+int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps, void *p, int len )
 {
+    int vRet=0;
     AVOutputFormat *of=NULL;
     AVStream *pst=NULL;
     AVCodecContext *pcc=NULL;
+    
+    av_register_all();
+    
+    av_log_set_level(AV_LOG_DEBUG);
     
     // The first packet from network should be SPS
 #if 0
@@ -148,8 +165,7 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, void *p, i
     }
 #endif
     
-    NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.avi"];
-    //const char *file = "test.avi";
+    NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
     const char *file = [videoPath UTF8String];
     
     if(!fc)
@@ -157,55 +173,99 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, void *p, i
         fprintf(stderr, "AVFormatContext no exist");
         return -1;
     }
+    fprintf(stderr, "file=%s\n",file);
+    
     // Create container
     of = av_guess_format( 0, file, 0 );
-    //fc = avformat_alloc_context();
-    
     fc->oformat = of;
     strcpy( fc->filename, file );
     
     // Add video stream
     pst = avformat_new_stream( fc, 0 );
     vStreamIdx = pst->index;
-    
+        
     pcc = pst->codec;
-    // avcodec_get_context_defaults2( pcc, AVMEDIA_TYPE_VIDEO );
-#if 0
-    get_context_defaults2( pcc, AVMEDIA_TYPE_VIDEO );
-#else
-    {
-        AVCodec         *pCodec;
-        pCodec = avcodec_find_decoder(CODEC_ID_H264);
-        pcc = avcodec_alloc_context3(pCodec);
-        if (!pcc) {
-            //failed to allocate codec context
-            av_log(NULL, AV_LOG_ERROR, "Unsupported codec!\n");
-            //goto initError;
-        }
-    }
-#endif
-    
+    avcodec_get_context_defaults3( pcc, AVMEDIA_TYPE_VIDEO );
+
     // Save the stream as origin setting without convert
     pcc->codec_type = pCodecCtx->codec_type;
     pcc->codec_id = pCodecCtx->codec_id;
     pcc->bit_rate = pCodecCtx->bit_rate;
     pcc->width = pCodecCtx->width;
     pcc->height = pCodecCtx->height;
+    
+#if 0
     pcc->time_base.num = pCodecCtx->time_base.num;
     pcc->time_base.den = pCodecCtx->time_base.den;
+    NSLog(@"fps_method(tbc): 1/av_q2d()=%g",1.0/av_q2d(pcc->time_base));
     
-    // Init container
-    //av_set_parameters( fc, 0 );
+#else
+    
+    NSLog(@"input fps=%f",fps);
+    if(fps==0)
+    {
+        //TODO: check here, something may overflow
+        double fps=25.0;
+        AVRational pTimeBase;
+        pTimeBase.num = pCodecCtx->time_base.num;
+        pTimeBase.den = pCodecCtx->time_base.den;
+        // Below function maybe unsafe
+        //fps = 1.0/av_q2d(pTimeBase);
+        NSLog(@"fps_method(tbc): 1/av_q2d()=%g",fps);
+        pcc->time_base.num = 1;
+        pcc->time_base.den = fps;
+
+    }
+    else
+    {
+        pcc->time_base.num = 1;
+        pcc->time_base.den = fps;
+    }
+#endif
+    
+    
+    // reference ffmpeg\libavformat\utils.c
+    
+    
+//    pcc->gop_size = pCodecCtx-> gop_size;
+//    pcc->pix_fmt = pCodecCtx-> pix_fmt;
+    
+    
+    //pcc->compression_level = pCodecCtx->compression_level;
+    //->delay = pCodecCtx->delay;
+    // For MP4 ftyp container
+    //pcc->profile = pCodecCtx->profile;
+    
+    // For Audio stream
+    //    pcc->channels = pCodecCtx->channels;
+    //    pcc->sample_rate = pCodecCtx->sample_rate;
+    //    pcc->sample_fmt = pCodecCtx->sample_rate;
+    //    pcc->sample_aspect_ratio = pCodecCtx->sample_aspect_ratio;
+    
+    // For SPS and PPS in avcC container
+    pcc->extradata = malloc(sizeof(uint8_t)*pCodecCtx->extradata_size);
+    memcpy(pcc->extradata, pCodecCtx->extradata, pCodecCtx->extradata_size);
+    pcc->extradata_size = pCodecCtx->extradata_size;
+
+    
+    if(fc->oformat->flags & AVFMT_GLOBALHEADER)
+    {
+        pcc->flags |= CODEC_FLAG_GLOBAL_HEADER;
+    }
     
     if ( !( fc->oformat->flags & AVFMT_NOFILE ) )
     {
-        //avio_open( &fc->pb, fc->filename, URL_WRONLY );
         avio_open( &fc->pb, fc->filename, AVIO_FLAG_WRITE );
     }
     
-    //av_write_header( fc );
-    avformat_write_header( fc, NULL );
-    return 1;
+    // dump format in console
+    av_dump_format(fc, 0, file, 1);
+    
+    vRet = avformat_write_header( fc, NULL );
+    if(vRet==0)
+        return true;
+    else
+        return false;
 }
 
 #if 0
