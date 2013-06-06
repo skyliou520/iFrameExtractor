@@ -153,7 +153,6 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps
     AVCodecContext *pcc=NULL;
     
     av_register_all();
-    
     av_log_set_level(AV_LOG_DEBUG);
     
     // The first packet from network should be SPS
@@ -194,23 +193,13 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps
     pcc->width = pCodecCtx->width;
     pcc->height = pCodecCtx->height;
     
-#if 0
-    pcc->time_base.num = pCodecCtx->time_base.num;
-    pcc->time_base.den = pCodecCtx->time_base.den;
-    NSLog(@"fps_method(tbc): 1/av_q2d()=%g",1.0/av_q2d(pcc->time_base));
-    
-#else
-    
-    NSLog(@"input fps=%f",fps);
     if(fps==0)
     {
-        //TODO: check here, something may overflow
-        double fps=25.0;
+        double fps=0.0;
         AVRational pTimeBase;
         pTimeBase.num = pCodecCtx->time_base.num;
         pTimeBase.den = pCodecCtx->time_base.den;
-        // Below function maybe unsafe
-        //fps = 1.0/av_q2d(pTimeBase);
+        fps = 1.0/ av_q2d(pCodecCtx->time_base)/ FFMAX(pCodecCtx->ticks_per_frame, 1);
         NSLog(@"fps_method(tbc): 1/av_q2d()=%g",fps);
         pcc->time_base.num = 1;
         pcc->time_base.den = fps;
@@ -221,8 +210,6 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps
         pcc->time_base.num = 1;
         pcc->time_base.den = fps;
     }
-#endif
-    
     
     // reference ffmpeg\libavformat\utils.c
     
