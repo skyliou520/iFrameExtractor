@@ -1,1 +1,14 @@
-ffmpeg/
+ffmpeg/
+.DS_Store
+
+*.xcuserstate
+
+*.xcsettings
+
+*.xcscheme
+
+iFrameExtractor.xcodeproj/xcuserdata/liaokuohsun.xcuserdatad/xcdebugger/Breakpoints.xcbkptlist
+
+iFrameExtractor.xcodeproj/xcuserdata/liaokuohsun.xcuserdatad/xcschemes/xcschememanagement.plist
+
+Default-568h@2x.png
