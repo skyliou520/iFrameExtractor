@@ -47,6 +47,7 @@
     // 20130524 albert.liao modified start
     AVFormatContext *pFormatCtx_Record;
     // 20130524 albert.liao modified end
+    
 }
 
 /* Last decoded picture as UIImage */
@@ -76,6 +77,7 @@
 // 20130524 albert.liao modified start
 @property (nonatomic) BOOL bSnapShot;
 @property (nonatomic) int veVideoRecordState;
+@property (nonatomic, retain) NSTimer *RecordingTimer;
 - (void) SnapShot_AlertView:(NSError *)error;               
 // 20130524 albert.liao modified end
 

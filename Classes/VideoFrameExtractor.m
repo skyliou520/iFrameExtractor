@@ -24,7 +24,7 @@
 // 20130524 albert.liao modified start
 
 // 20130524 albert.liao modified start
-@synthesize bSnapShot, veVideoRecordState;
+@synthesize bSnapShot, veVideoRecordState, RecordingTimer;
 
 - (void) SnapShot_AlertView:(NSError *)error
 {
@@ -135,9 +135,10 @@
     
     // Open video file
     AVDictionary *opts = 0;
-    int ret = av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+    //int ret = av_dict_set(&opts, "rtsp_transport", "tcp", 0);
+    av_dict_set(&opts, "rtsp_transport", "tcp", 0);
     
-    if(avformat_open_input(&pFormatCtx, [moviePath cStringUsingEncoding:NSASCIIStringEncoding], NULL, NULL) != 0) {
+    if(avformat_open_input(&pFormatCtx, [moviePath cStringUsingEncoding:NSASCIIStringEncoding], NULL, &opts) != 0) {
         av_log(NULL, AV_LOG_ERROR, "Couldn't open file\n");
         goto initError;
     }
@@ -240,9 +241,16 @@ initError:
 	[super dealloc];
 }
 
+-(void)StopRecording:(NSTimer *)timer {
+    veVideoRecordState = eH264RecClose;
+    NSLog(@"eH264RecClose");
+    [timer invalidate];
+}
+
 -(BOOL)stepFrame {
 	// AVPacket packet;
     int frameFinished=0;
+    static bool bFirstIFrame=false;
 
     while(!frameFinished && av_read_frame(pFormatCtx, &packet)>=0) {
         // Is this a packet from the video stream?
@@ -250,8 +258,8 @@ initError:
             
             
             // 20130525 albert.liao modified start
-//            fprintf(stderr, "packet len=%d, Byte=%02X%02X%02X%02X%02X, State=%d\n",\
-                    packet.size, packet.data[0],packet.data[1],packet.data[2],packet.data[3], packet.data[4],veVideoRecordState);
+//            fprintf(stderr, "packet len=%d, Byte=%02X%02X%02X%02X%02X%02X%02X%02X, State=%d\n",\
+                    packet.size, packet.data[0],packet.data[1],packet.data[2],packet.data[3], packet.data[4],packet.data[5],packet.data[6],packet.data[7],veVideoRecordState);
             
             // Decode video frame
             avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
@@ -268,9 +276,10 @@ initError:
                         if ( !pFormatCtx_Record )
                         {
                             int bFlag = 0;
-                            
+                            NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
+                            const char *file = [videoPath UTF8String];
                             pFormatCtx_Record = avformat_alloc_context();
-                            bFlag = h264_file_create( pFormatCtx_Record, pCodecCtx,/*fps*/0.0, packet.data, packet.size );
+                            bFlag = h264_file_create(file, pFormatCtx_Record, pCodecCtx,/*fps*/0.0, packet.data, packet.size );
                             
                             if(bFlag==true)
                             {
@@ -284,17 +293,40 @@ initError:
                             }
                         }
                     }
-                    break;
+                    //break;
                         
                     case eH264RecActive:
                     {
-                        if ( pFormatCtx_Record )
+                        if((packet.flags&AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
                         {
-                            h264_file_write_frame( pFormatCtx_Record, packet.data, packet.size, packet.dts, packet.pts);
+                            bFirstIFrame=TRUE;
+#if 0
+                            NSRunLoop *pRunLoop = [NSRunLoop currentRunLoop];
+                            [pRunLoop addTimer:RecordingTimer forMode:NSDefaultRunLoopMode];
+#else
+                            [NSTimer scheduledTimerWithTimeInterval:5.0//2.0
+                                                             target:self
+                                                           selector:@selector(StopRecording:)
+                                                           userInfo:nil
+                                                            repeats:NO];
+#endif
                         }
-                        else
+                        
+                        // Record audio when 1st i-Frame is obtained
+                        if(bFirstIFrame==TRUE)
                         {
-                            NSLog(@"pFormatCtx_Record no exist");
+
+                            
+
+                            
+                            if ( pFormatCtx_Record )
+                            {
+                                h264_file_write_frame( pFormatCtx_Record, packet.data, packet.size, packet.dts, packet.pts);
+                            }
+                            else
+                            {
+                                NSLog(@"pFormatCtx_Record no exist");
+                            }
                         }
                     }
                     break;
@@ -311,6 +343,7 @@ initError:
                         {
                             NSLog(@"fc no exist");
                         }
+                        bFirstIFrame = false;
                         veVideoRecordState = eH264RecIdle;
                     }
                     break;

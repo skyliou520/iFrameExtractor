@@ -145,7 +145,7 @@ void h264_file_write_frame(AVFormatContext *fc, const void* p, int len, int dts,
 }
 
 
-int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps, void *p, int len )
+int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps, void *p, int len )
 {
     int vRet=0;
     AVOutputFormat *of=NULL;
@@ -162,22 +162,25 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps
         fprintf(stderr, "get_nal_type( p, len ) = %d\n", get_nal_type( p, len ));
         return -1;
     }
-#endif
-    
-    NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
-    const char *file = [videoPath UTF8String];
+#endif    
+
+    if(!pFilePath)
+    {
+        fprintf(stderr, "FilePath no exist");
+        return -1;
+    }
     
     if(!fc)
     {
         fprintf(stderr, "AVFormatContext no exist");
         return -1;
     }
-    fprintf(stderr, "file=%s\n",file);
+    fprintf(stderr, "file=%s\n",pFilePath);
     
     // Create container
-    of = av_guess_format( 0, file, 0 );
+    of = av_guess_format( 0, pFilePath, 0 );
     fc->oformat = of;
-    strcpy( fc->filename, file );
+    strcpy( fc->filename, pFilePath );
     
     // Add video stream
     pst = avformat_new_stream( fc, 0 );
@@ -246,7 +249,7 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps
     }
     
     // dump format in console
-    av_dump_format(fc, 0, file, 1);
+    av_dump_format(fc, 0, pFilePath, 1);
     
     vRet = avformat_write_header( fc, NULL );
     if(vRet==0)
@@ -254,65 +257,3 @@ int h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps
     else
         return false;
 }
-
-#if 0
-main()
-{
-    // Initialize a new format context for writing file
-    AVFormatContext *fc = NULL;
-    
-    if(veVideoRecordState!=eH264RecIdle)
-    {
-        switch(veVideoRecordState)
-        {
-            case eH264RecInit:
-            {
-                if ( !fc )
-                {
-                    fc = avformat_alloc_context();
-                    h264_file_create( fc, buf, sz );
-                }
-            }
-                break;
-                
-            case eH264RecActive:
-            {
-                if ( fc )
-                {
-                    h264_file_write_frame( fc, buf, sz );
-                }
-                else
-                {
-                    NSLog(@"fc no exist");
-                }
-            }
-                break;
-                
-            case eH264RecClose:
-            {
-                if ( fc )
-                {
-                    h264_file_close(fc);
-                    fs = NULL;
-                }
-                else
-                {
-                    NSLog(@"fc no exist");
-                }
-                veVideoRecordState = eH264RecIdle;
-            }   
-                break;
-                
-            default:
-                if ( fc )
-                {
-                    h264_file_close(fc);   
-                    fs = NULL;
-                }         
-                NSLog(@"[ERROR] unexpected veVideoRecordState!!");
-                veVideoRecordState = eH264RecIdle;
-                break;
-        }
-    }
-}
-#endif

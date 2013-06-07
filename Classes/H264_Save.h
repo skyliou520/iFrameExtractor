@@ -9,7 +9,7 @@
 #ifndef iFrameExtractor_H264_Save_h
 #define iFrameExtractor_H264_Save_h
 
-extern int  h264_file_create( AVFormatContext *fc, AVCodecContext *pCodecCtx,double fps, void *p, int len );
+extern int  h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext *pCodecCtx,double fps, void *p, int len );
 extern void h264_file_write_frame(AVFormatContext *fc, const void* p, int len, int dts, int pts);
 extern void h264_file_close(AVFormatContext *fc);
 

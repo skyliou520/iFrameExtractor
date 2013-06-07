@@ -113,11 +113,18 @@
 - (IBAction)RecordButtionAction:(id)sender {
     self.video.veVideoRecordState = eH264RecInit;
     
-	[NSTimer scheduledTimerWithTimeInterval:5.0//2.0
-									 target:self
-								   selector:@selector(StopRecording:)
-								   userInfo:nil
-									repeats:NO];
+//	self.video.RecordingTimer = [NSTimer scheduledTimerWithTimeInterval:5.0//2.0
+//									 target:self
+//								   selector:@selector(StopRecording:)
+//								   userInfo:nil
+//									repeats:NO];
+#if 0
+	self.video.RecordingTimer = [NSTimer timerWithTimeInterval:5.0//2.0
+                                                                 target:self
+                                                               selector:@selector(StopRecording:)
+                                                               userInfo:nil
+                                                                repeats:NO];
+#endif
 }
 // 20130524 albert.liao modified end
 
