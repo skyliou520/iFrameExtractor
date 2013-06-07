@@ -14,35 +14,6 @@
 
 int vStreamIdx = -1, waitkey = 1;
 
-#if 1
-// Read nal type from RTP payload
-static int get_nal_type( const void *p, int len )
-{
-    unsigned char *b = (unsigned char*)p;
-    
-    if ( !b || 5 >= len )
-    {
-        fprintf(stderr, "get_nal_type() error");
-        return -1;
-    }
-    
-    if( b[0] || b[1] || 0x01!=b[2])
-    {
-        b++;
-       if( b[0] || b[1] || 0x01!=b[2])
-           return -1;
-    }
-    b += 3;
-    return *b;
-}
-#else
-// Read nal type from AVFrame of FFMPEG
-static int get_nal_type( void *p, int len )
-{
-    // TODO
-}
-#endif
-
 // < 0 = error
 // 0 = I-Frame
 // 1 = P-Frame
@@ -95,22 +66,16 @@ void h264_file_close(AVFormatContext *fc)
 void h264_file_write_frame(AVFormatContext *fc, const void* p, int len, int dts, int pts )
 {
     AVStream *pst = NULL;
-    int vNalType = 0;
     if ( 0 > vStreamIdx )
         return;
     
     pst = fc->streams[ vStreamIdx ];
     
-    // TODO: copy sps and pss to generate AVCC container box
-    vNalType = get_nal_type(p, len ) ;
-    if ( (vNalType==0x67) || (vNalType==0x68))
-    {
-        fprintf(stderr, "\ngot SPS\n");
-    }
     // Init packet
     AVPacket pkt;
     av_init_packet( &pkt );
     pkt.flags |= ( 0 >= getVopType( p, len ) ) ? AV_PKT_FLAG_KEY : 0;
+    //pkt.flags |= AV_PKT_FLAG_KEY;
     pkt.stream_index = pst->index;
     pkt.data = (uint8_t*)p;
     pkt.size = len;
@@ -153,16 +118,7 @@ int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext 
     AVCodecContext *pcc=NULL;
     
     av_register_all();
-    av_log_set_level(AV_LOG_DEBUG);
-    
-    // The first packet from network should be SPS
-#if 0
-    if ( 0x67 != get_nal_type( p, len ) )
-    {
-        fprintf(stderr, "get_nal_type( p, len ) = %d\n", get_nal_type( p, len ));
-        return -1;
-    }
-#endif    
+    av_log_set_level(AV_LOG_VERBOSE);//AV_LOG_DEBUG
 
     if(!pFilePath)
     {

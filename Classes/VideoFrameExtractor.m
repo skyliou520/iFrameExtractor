@@ -8,7 +8,7 @@
 
 #import "VideoFrameExtractor.h"
 #import "Utilities.h"
-
+#import <AssetsLibrary/AssetsLibrary.h>
 @interface VideoFrameExtractor (private)
 -(void)convertFrameToRGB;
 -(UIImage *)imageFromAVPicture:(AVPicture)pict width:(int)width height:(int)height;
@@ -76,27 +76,27 @@
     // Save the image and clear the bSnapShot flag
     if(self.bSnapShot==YES)
     {
-        UIImage *myimg=nil;
-        AVPicture picture_tmp;
-        struct SwsContext *img_convert_ctx_tmp;
-        avpicture_alloc(&picture_tmp, PIX_FMT_RGB24, pFrame->width, pFrame->height);
-        img_convert_ctx_tmp = sws_getContext(pCodecCtx->width,
-                                             pCodecCtx->height,
-                                             pCodecCtx->pix_fmt,
-                                             pFrame->width,
-                                             pFrame->height,
-                                             PIX_FMT_RGB24,
-                                             SWS_FAST_BILINEAR, NULL, NULL, NULL);
+            UIImage *myimg=nil;
+            AVPicture picture_tmp;
+            struct SwsContext *img_convert_ctx_tmp;
+            avpicture_alloc(&picture_tmp, PIX_FMT_RGB24, pFrame->width, pFrame->height);
+            img_convert_ctx_tmp = sws_getContext(pCodecCtx->width,
+                                                 pCodecCtx->height,
+                                                 pCodecCtx->pix_fmt,
+                                                 pFrame->width,
+                                                 pFrame->height,
+                                                 PIX_FMT_RGB24,
+                                                 SWS_FAST_BILINEAR, NULL, NULL, NULL);
+            
+            sws_scale (img_convert_ctx_tmp, (const uint8_t **)pFrame->data, pFrame->linesize,
+                       0, pCodecCtx->height,
+                       picture_tmp.data, picture_tmp.linesize);
+            
+            myimg = [self imageFromAVPicture:picture_tmp width:pFrame->width height:pFrame->height];
+            
+            UIImageWriteToSavedPhotosAlbum(myimg, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
+            self.bSnapShot = NO;
         
-        sws_scale (img_convert_ctx_tmp, (const uint8_t **)pFrame->data, pFrame->linesize,
-                   0, pCodecCtx->height,
-                   picture_tmp.data, picture_tmp.linesize);
-        
-        myimg = [self imageFromAVPicture:picture_tmp width:pFrame->width height:pFrame->height];
-        
-        UIImageWriteToSavedPhotosAlbum(myimg, self, @selector(image:didFinishSavingWithError:contextInfo:), nil);
-        
-        self.bSnapShot = NO;
     }
     // 20130524 albert.liao modified end    
     
@@ -277,6 +277,7 @@ initError:
                         {
                             int bFlag = 0;
                             NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
+//                            NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
                             const char *file = [videoPath UTF8String];
                             pFormatCtx_Record = avformat_alloc_context();
                             bFlag = h264_file_create(file, pFormatCtx_Record, pCodecCtx,/*fps*/0.0, packet.data, packet.size );
@@ -336,6 +337,28 @@ initError:
                         if ( pFormatCtx_Record )
                         {
                             h264_file_close(pFormatCtx_Record);
+                            
+                            // 20130607 Test
+                            dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
+                            {
+                                ALAssetsLibrary *library = [[ALAssetsLibrary alloc]init];
+                                NSString *filePathString = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
+                                NSURL *filePathURL = [NSURL fileURLWithPath:filePathString isDirectory:NO];
+                                if(1)// ([library videoAtPathIsCompatibleWithSavedPhotosAlbum:filePathURL])
+                                {
+                                    [library writeVideoAtPathToSavedPhotosAlbum:filePathURL completionBlock:^(NSURL *assetURL, NSError *error){
+                                        if (error) {
+                                            // TODO: error handling
+                                            NSLog(@"writeVideoAtPathToSavedPhotosAlbum error");
+                                        } else {
+                                            // TODO: success handling
+                                            NSLog(@"writeVideoAtPathToSavedPhotosAlbum success");
+                                        }
+                                    }];
+                                }
+                                [library release];
+                            });
+                            
                             pFormatCtx_Record = NULL;
                             NSLog(@"h264_file_close() is finished");
                         }
@@ -345,6 +368,9 @@ initError:
                         }
                         bFirstIFrame = false;
                         veVideoRecordState = eH264RecIdle;
+                        
+                        
+                        
                     }
                     break;
                         

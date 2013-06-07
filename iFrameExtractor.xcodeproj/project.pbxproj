@@ -19,7 +19,6 @@
 		156A982615DCDD9B00898981 /* libavfilter.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 156A981E15DCDD9B00898981 /* libavfilter.a */; };
 		156A982715DCDD9B00898981 /* libavformat.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 156A981F15DCDD9B00898981 /* libavformat.a */; };
 		156A982815DCDD9B00898981 /* libavutil.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 156A982015DCDD9B00898981 /* libavutil.a */; };
-		156A982915DCDD9B00898981 /* libpostproc.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 156A982115DCDD9B00898981 /* libpostproc.a */; };
 		156A982A15DCDD9B00898981 /* libswresample.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 156A982215DCDD9B00898981 /* libswresample.a */; };
 		156A982B15DCDD9B00898981 /* libswscale.a in Frameworks */ = {isa = PBXBuildFile; fileRef = 156A982315DCDD9B00898981 /* libswscale.a */; };
 		1D3623260D0F684500981E51 /* iFrameExtractorAppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = 1D3623250D0F684500981E51 /* iFrameExtractorAppDelegate.m */; };
@@ -29,6 +28,8 @@
 		28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */ = {isa = PBXBuildFile; fileRef = 28AD733E0D9D9553002E5188 /* MainWindow.xib */; };
 		9A95E74D174F11D7008EB183 /* libiconv.2.4.0.dylib in Frameworks */ = {isa = PBXBuildFile; fileRef = 9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */; };
 		9A95E74F174F5AA6008EB183 /* H264_Save.m in Sources */ = {isa = PBXBuildFile; fileRef = 9A95E74E174F5AA6008EB183 /* H264_Save.m */; };
+		9ADF204A1761B6180018ACF3 /* Default-568h@2x.png in Resources */ = {isa = PBXBuildFile; fileRef = 9ADF20491761B6180018ACF3 /* Default-568h@2x.png */; };
+		9ADF204C1761BCFD0018ACF3 /* AssetsLibrary.framework in Frameworks */ = {isa = PBXBuildFile; fileRef = 9ADF204B1761BCFD0018ACF3 /* AssetsLibrary.framework */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
@@ -45,7 +46,6 @@
 		156A981E15DCDD9B00898981 /* libavfilter.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavfilter.a; path = compiled/i386/lib/libavfilter.a; sourceTree = "<group>"; };
 		156A981F15DCDD9B00898981 /* libavformat.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavformat.a; path = compiled/i386/lib/libavformat.a; sourceTree = "<group>"; };
 		156A982015DCDD9B00898981 /* libavutil.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libavutil.a; path = compiled/i386/lib/libavutil.a; sourceTree = "<group>"; };
-		156A982115DCDD9B00898981 /* libpostproc.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libpostproc.a; path = compiled/i386/lib/libpostproc.a; sourceTree = "<group>"; };
 		156A982215DCDD9B00898981 /* libswresample.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswresample.a; path = compiled/i386/lib/libswresample.a; sourceTree = "<group>"; };
 		156A982315DCDD9B00898981 /* libswscale.a */ = {isa = PBXFileReference; lastKnownFileType = archive.ar; name = libswscale.a; path = compiled/i386/lib/libswscale.a; sourceTree = "<group>"; };
 		1D30AB110D05D00D00671497 /* Foundation.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = Foundation.framework; path = System/Library/Frameworks/Foundation.framework; sourceTree = SDKROOT; };
@@ -61,6 +61,8 @@
 		9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */ = {isa = PBXFileReference; lastKnownFileType = "compiled.mach-o.dylib"; name = libiconv.2.4.0.dylib; path = usr/lib/libiconv.2.4.0.dylib; sourceTree = SDKROOT; };
 		9A95E74E174F5AA6008EB183 /* H264_Save.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = H264_Save.m; sourceTree = "<group>"; };
 		9A95E750174F5AC0008EB183 /* H264_Save.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = H264_Save.h; sourceTree = "<group>"; };
+		9ADF20491761B6180018ACF3 /* Default-568h@2x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "Default-568h@2x.png"; sourceTree = "<group>"; };
+		9ADF204B1761BCFD0018ACF3 /* AssetsLibrary.framework */ = {isa = PBXFileReference; lastKnownFileType = wrapper.framework; name = AssetsLibrary.framework; path = System/Library/Frameworks/AssetsLibrary.framework; sourceTree = SDKROOT; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -68,13 +70,13 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				9ADF204C1761BCFD0018ACF3 /* AssetsLibrary.framework in Frameworks */,
 				9A95E74D174F11D7008EB183 /* libiconv.2.4.0.dylib in Frameworks */,
 				156A982415DCDD9B00898981 /* libavcodec.a in Frameworks */,
 				156A982515DCDD9B00898981 /* libavdevice.a in Frameworks */,
 				156A982615DCDD9B00898981 /* libavfilter.a in Frameworks */,
 				156A982715DCDD9B00898981 /* libavformat.a in Frameworks */,
 				156A982815DCDD9B00898981 /* libavutil.a in Frameworks */,
-				156A982915DCDD9B00898981 /* libpostproc.a in Frameworks */,
 				156A982A15DCDD9B00898981 /* libswresample.a in Frameworks */,
 				156A982B15DCDD9B00898981 /* libswscale.a in Frameworks */,
 				156A981B15DCDD8C00898981 /* libbz2.1.0.dylib in Frameworks */,
@@ -111,7 +113,6 @@
 				156A981E15DCDD9B00898981 /* libavfilter.a */,
 				156A981F15DCDD9B00898981 /* libavformat.a */,
 				156A982015DCDD9B00898981 /* libavutil.a */,
-				156A982115DCDD9B00898981 /* libpostproc.a */,
 				156A982215DCDD9B00898981 /* libswresample.a */,
 				156A982315DCDD9B00898981 /* libswscale.a */,
 			);
@@ -129,6 +130,8 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
+				9ADF204B1761BCFD0018ACF3 /* AssetsLibrary.framework */,
+				9ADF20491761B6180018ACF3 /* Default-568h@2x.png */,
 				0918E6C310F839A300300130 /* ffmpeg */,
 				9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */,
 				080E96DDFE201D6D7F000001 /* Classes */,
@@ -224,6 +227,7 @@
 				28AD733F0D9D9553002E5188 /* MainWindow.xib in Resources */,
 				0918E6D110F839FC00300130 /* sophie.mov in Resources */,
 				09F1D692110ED3AA00F50511 /* Default.png in Resources */,
+				9ADF204A1761B6180018ACF3 /* Default-568h@2x.png in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -254,10 +258,22 @@
 				GCC_OPTIMIZATION_LEVEL = 0;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = iFrameExtractor_Prefix.pch;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/ffmpeg/compiled/i386/include\"";
+				HEADER_SEARCH_PATHS = "";
+				"HEADER_SEARCH_PATHS[arch=armv7]" = "\"$(SRCROOT)/ffmpeg/compiled/armv7-neon/include\"";
+				"HEADER_SEARCH_PATHS[arch=armv7s]" = "\"$(SRCROOT)/ffmpeg/compiled/armv7s-neon/include\"";
+				"HEADER_SEARCH_PATHS[sdk=iphonesimulator*]" = "\"$(SRCROOT)/ffmpeg/compiled/i386/include\"";
 				INFOPLIST_FILE = "iFrameExtractor-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				LIBRARY_SEARCH_PATHS = (
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
+				"LIBRARY_SEARCH_PATHS[arch=armv7]" = (
+					"$(inherited)",
+					"\"$(SRCROOT)/ffmpeg/compiled/armv7-neon/lib\"",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=armv7s]" = (
+					"$(inherited)",
+					"\"$(SRCROOT)/ffmpeg/compiled/armv7s-neon/lib\"",
+				);
+				"LIBRARY_SEARCH_PATHS[sdk=iphonesimulator*]" = (
 					"$(inherited)",
 					"\"$(SRCROOT)/ffmpeg/compiled/i386/lib\"",
 				);
@@ -274,12 +290,21 @@
 				COPY_PHASE_STRIP = YES;
 				GCC_PRECOMPILE_PREFIX_HEADER = YES;
 				GCC_PREFIX_HEADER = iFrameExtractor_Prefix.pch;
-				HEADER_SEARCH_PATHS = "\"$(SRCROOT)/ffmpeg/compiled/i386/include\"";
+				HEADER_SEARCH_PATHS = "";
+				"HEADER_SEARCH_PATHS[arch=armv7]" = "\"$(SRCROOT)/ffmpeg/compiled/armv7-neon/include\"";
+				"HEADER_SEARCH_PATHS[arch=armv7s]" = "\"$(SRCROOT)/ffmpeg/compiled/armv7s-neon/include\"";
 				INFOPLIST_FILE = "iFrameExtractor-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
 				LIBRARY_SEARCH_PATHS = (
 					"$(inherited)",
-					"\"$(SRCROOT)/ffmpeg/compiled/i386/lib\"",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=armv7]" = (
+					"$(inherited)",
+					"\"$(SRCROOT)/ffmpeg/compiled/armv7-neon/lib\"",
+				);
+				"LIBRARY_SEARCH_PATHS[arch=armv7s]" = (
+					"$(inherited)",
+					"\"$(SRCROOT)/ffmpeg/compiled/armv7s-neon/lib\"",
 				);
 				PRODUCT_NAME = iFrameExtractor;
 				SDKROOT = iphoneos;
@@ -297,6 +322,7 @@
 				GCC_WARN_UNUSED_VARIABLE = YES;
 				HEADER_SEARCH_PATHS = ./ffmpeg;
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
+				"LIBRARY_SEARCH_PATHS[arch=armv7]" = "";
 				SDKROOT = iphoneos;
 			};
 			name = Debug;
