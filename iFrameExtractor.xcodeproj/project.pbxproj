@@ -94,8 +94,8 @@
 			isa = PBXGroup;
 			children = (
 				1D3623240D0F684500981E51 /* iFrameExtractorAppDelegate.h */,
-				1D3623250D0F684500981E51 /* iFrameExtractorAppDelegate.m */,
 				0921E13F10FADAFB004EAA40 /* Utilities.h */,
+				1D3623250D0F684500981E51 /* iFrameExtractorAppDelegate.m */,
 				0921E14010FADAFB004EAA40 /* Utilities.m */,
 				0921E14410FADB97004EAA40 /* VideoFrameExtractor.h */,
 				0921E14510FADB97004EAA40 /* VideoFrameExtractor.m */,
@@ -109,12 +109,12 @@
 			isa = PBXGroup;
 			children = (
 				156A981C15DCDD9B00898981 /* libavcodec.a */,
+				156A981F15DCDD9B00898981 /* libavformat.a */,
 				156A981D15DCDD9B00898981 /* libavdevice.a */,
 				156A981E15DCDD9B00898981 /* libavfilter.a */,
-				156A981F15DCDD9B00898981 /* libavformat.a */,
+				156A982315DCDD9B00898981 /* libswscale.a */,
 				156A982015DCDD9B00898981 /* libavutil.a */,
 				156A982215DCDD9B00898981 /* libswresample.a */,
-				156A982315DCDD9B00898981 /* libswscale.a */,
 			);
 			path = ffmpeg;
 			sourceTree = "<group>";
@@ -130,10 +130,8 @@
 		29B97314FDCFA39411CA2CEA /* CustomTemplate */ = {
 			isa = PBXGroup;
 			children = (
-				9ADF204B1761BCFD0018ACF3 /* AssetsLibrary.framework */,
 				9ADF20491761B6180018ACF3 /* Default-568h@2x.png */,
 				0918E6C310F839A300300130 /* ffmpeg */,
-				9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */,
 				080E96DDFE201D6D7F000001 /* Classes */,
 				29B97315FDCFA39411CA2CEA /* Other Sources */,
 				29B97317FDCFA39411CA2CEA /* Resources */,
@@ -166,6 +164,8 @@
 		29B97323FDCFA39411CA2CEA /* Frameworks */ = {
 			isa = PBXGroup;
 			children = (
+				9A95E74C174F11D7008EB183 /* libiconv.2.4.0.dylib */,
+				9ADF204B1761BCFD0018ACF3 /* AssetsLibrary.framework */,
 				156A981A15DCDD8C00898981 /* libbz2.1.0.dylib */,
 				1DF5F4DF0D08C38300B7A737 /* UIKit.framework */,
 				1D30AB110D05D00D00671497 /* Foundation.framework */,
@@ -295,9 +295,7 @@
 				"HEADER_SEARCH_PATHS[arch=armv7s]" = "\"$(SRCROOT)/ffmpeg/compiled/armv7s-neon/include\"";
 				INFOPLIST_FILE = "iFrameExtractor-Info.plist";
 				IPHONEOS_DEPLOYMENT_TARGET = 6.1;
-				LIBRARY_SEARCH_PATHS = (
-					"$(inherited)",
-				);
+				LIBRARY_SEARCH_PATHS = "$(inherited)";
 				"LIBRARY_SEARCH_PATHS[arch=armv7]" = (
 					"$(inherited)",
 					"\"$(SRCROOT)/ffmpeg/compiled/armv7-neon/lib\"",

@@ -29,9 +29,14 @@
 #include "H264_Save.h"
 // 20130525 albert.liao modified end
 
+#define RECORDING_AT_RTSP_START 0
+//#define RECORDING_AT_RTSP_START 1
+#define RECPRDING_SECONDS 5
+
 @interface VideoFrameExtractor : NSObject {
 	AVFormatContext *pFormatCtx;
 	AVCodecContext *pCodecCtx;
+    
     AVFrame *pFrame;
     AVPacket packet;
 	AVPicture picture;
@@ -46,6 +51,7 @@
     
     // 20130524 albert.liao modified start
     AVFormatContext *pFormatCtx_Record;
+    AVCodecContext *pAudioCodecCtx;
     // 20130524 albert.liao modified end
     
 }

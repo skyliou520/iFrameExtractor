@@ -10,9 +10,10 @@
 #include <stdio.h>
 #include "libavcodec/avcodec.h"
 #include "libavformat/avformat.h"
+#include "H264_Save.h"
 //#include "libavformat/avio.h"
 
-int vStreamIdx = -1, waitkey = 1;
+int vVideoStreamIdx = -1, vAudioStreamIdx = -1,  waitkey = 1;
 
 // < 0 = error
 // 0 = I-Frame
@@ -63,62 +64,56 @@ void h264_file_close(AVFormatContext *fc)
 
 
 // Since the data may not from ffmpeg as AVPacket format
-void h264_file_write_frame(AVFormatContext *fc, const void* p, int len, int dts, int pts )
+void h264_file_write_frame(AVFormatContext *fc, int vStreamIdx, const void* p, int len, int64_t dts, int64_t pts )
 {
     AVStream *pst = NULL;
-    if ( 0 > vStreamIdx )
+    if ( 0 > vVideoStreamIdx )
         return;
     
+    // may be audio or video
     pst = fc->streams[ vStreamIdx ];
     
     // Init packet
     AVPacket pkt;
     av_init_packet( &pkt );
-    pkt.flags |= ( 0 >= getVopType( p, len ) ) ? AV_PKT_FLAG_KEY : 0;
-    //pkt.flags |= AV_PKT_FLAG_KEY;
+    if(vStreamIdx==vVideoStreamIdx)
+    {
+        pkt.flags |= ( 0 >= getVopType( p, len ) ) ? AV_PKT_FLAG_KEY : 0;
+        //pkt.flags |= AV_PKT_FLAG_KEY;
+    }
     pkt.stream_index = pst->index;
     pkt.data = (uint8_t*)p;
     pkt.size = len;
     
-    // Wait for key frame
-    if ( waitkey )
-    {
-        // #define AV_PKT_FLAG_KEY     0x0001 ///< The packet contains a keyframe
-        if ( 0 == ( pkt.flags & AV_PKT_FLAG_KEY ) )
-        {
-            fprintf(stderr, "( pkt.flags & AV_PKT_FLAG_KEY ) == 0");
-            return;
-        }
-        else
-        {
-            fprintf(stderr, "set waitkey = 0");
-            waitkey = 0;
-        }
-    }
-    
-    // TODO: check here
-#if 1
-    pkt.dts = AV_NOPTS_VALUE;
-    pkt.pts = AV_NOPTS_VALUE;
-#else
+#if PTS_DTS_IS_CORRECT == 1
     pkt.dts = dts;
     pkt.pts = pts;
+#else
+    pkt.dts = AV_NOPTS_VALUE;
+    pkt.pts = AV_NOPTS_VALUE;
 #endif
-    //fprintf(stderr, "dts=%d, pts=%d\n",dts,pts);
-    // Should we add 0x000001 ourself ??
+    // TODO: mark or unmark the log
+    //fprintf(stderr, "dts=%lld, pts=%lld\n",dts,pts);
+    // av_write_frame( fc, &pkt );
     av_interleaved_write_frame( fc, &pkt );
 }
 
+void h264_file_write_frame2(AVFormatContext *fc, int vStreamIdx, AVPacket *pPkt )
+{    
+    av_interleaved_write_frame( fc, pPkt );
+}
 
-int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext *pCodecCtx, double fps, void *p, int len )
+
+int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext *pCodecCtx,AVCodecContext *pAudioCodecCtx, double fps, void *p, int len )
 {
     int vRet=0;
     AVOutputFormat *of=NULL;
-    AVStream *pst=NULL;
-    AVCodecContext *pcc=NULL;
+    AVStream *pst=NULL, *pst2=NULL;
+    AVCodecContext *pcc=NULL, *pcc2=NULL;
     
+    avcodec_register_all();
     av_register_all();
-    av_log_set_level(AV_LOG_VERBOSE);//AV_LOG_DEBUG
+    av_log_set_level(AV_LOG_VERBOSE);
 
     if(!pFilePath)
     {
@@ -140,11 +135,17 @@ int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext 
     
     // Add video stream
     pst = avformat_new_stream( fc, 0 );
-    vStreamIdx = pst->index;
-        
+    vVideoStreamIdx = pst->index;
+    NSLog(@"Video Stream:%d",vVideoStreamIdx);
+    
     pcc = pst->codec;
     avcodec_get_context_defaults3( pcc, AVMEDIA_TYPE_VIDEO );
 
+    // TODO: test here
+    //*pcc = *pCodecCtx;
+    
+    // TODO: check ffmpeg source for "q=%d-%d", some parameter should be set before write header
+    
     // Save the stream as origin setting without convert
     pcc->codec_type = pCodecCtx->codec_type;
     pcc->codec_id = pCodecCtx->codec_id;
@@ -152,6 +153,21 @@ int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext 
     pcc->width = pCodecCtx->width;
     pcc->height = pCodecCtx->height;
     
+#if PTS_DTS_IS_CORRECT == 1
+    pcc->time_base.num = pCodecCtx->time_base.num;
+    pcc->time_base.den = pCodecCtx->time_base.den;
+    pcc->ticks_per_frame = pCodecCtx->ticks_per_frame;
+//    pcc->frame_bits= pCodecCtx->frame_bits;
+//    pcc->frame_size= pCodecCtx->frame_size;
+//    pcc->frame_number= pCodecCtx->frame_number;
+    
+//    pcc->pts_correction_last_dts = pCodecCtx->pts_correction_last_dts;
+//    pcc->pts_correction_last_pts = pCodecCtx->pts_correction_last_pts;
+    
+    NSLog(@"time_base, num=%d, den=%d, fps should be %g",\
+          pcc->time_base.num, pcc->time_base.den, \
+          (1.0/ av_q2d(pCodecCtx->time_base)/pcc->ticks_per_frame));
+#else
     if(fps==0)
     {
         double fps=0.0;
@@ -162,37 +178,54 @@ int h264_file_create(const char *pFilePath, AVFormatContext *fc, AVCodecContext 
         NSLog(@"fps_method(tbc): 1/av_q2d()=%g",fps);
         pcc->time_base.num = 1;
         pcc->time_base.den = fps;
-
     }
     else
     {
         pcc->time_base.num = 1;
         pcc->time_base.den = fps;
     }
-    
+#endif
     // reference ffmpeg\libavformat\utils.c
-    
-    
-//    pcc->gop_size = pCodecCtx-> gop_size;
-//    pcc->pix_fmt = pCodecCtx-> pix_fmt;
-    
-    
-    //pcc->compression_level = pCodecCtx->compression_level;
-    //->delay = pCodecCtx->delay;
-    // For MP4 ftyp container
-    //pcc->profile = pCodecCtx->profile;
-    
-    // For Audio stream
-    //    pcc->channels = pCodecCtx->channels;
-    //    pcc->sample_rate = pCodecCtx->sample_rate;
-    //    pcc->sample_fmt = pCodecCtx->sample_rate;
-    //    pcc->sample_aspect_ratio = pCodecCtx->sample_aspect_ratio;
-    
+
     // For SPS and PPS in avcC container
     pcc->extradata = malloc(sizeof(uint8_t)*pCodecCtx->extradata_size);
     memcpy(pcc->extradata, pCodecCtx->extradata, pCodecCtx->extradata_size);
     pcc->extradata_size = pCodecCtx->extradata_size;
-
+    
+    // TODO: support audio recording
+#if SUPPORT_AUDIO_RECORDING == 1
+    // For Audio stream
+    if(pAudioCodecCtx)
+    {
+        // Add video stream
+#if 1
+        pcc2 = avcodec_alloc_context3(pAudioCodecCtx->codec);
+        pst2 = avformat_new_stream( fc, pcc2->codec );
+        vVideoStreamIdx = pst2->index;
+        NSLog(@"Audio Stream:%d",vVideoStreamIdx);
+        
+#else
+        pst2 = avformat_new_stream( fc, pAudioCodecCtx->codec );
+        vVideoStreamIdx = pst2->index;
+        NSLog(@"Audio Stream:%d",vVideoStreamIdx);
+        
+        pcc2 = pst2->codec;
+        avcodec_get_context_defaults3( pcc2, AVMEDIA_TYPE_AUDIO );
+#endif
+        pcc2->channels = pAudioCodecCtx->channels;
+        pcc2->channel_layout = pAudioCodecCtx->channel_layout;
+        pcc2->sample_rate = pAudioCodecCtx->sample_rate;
+        pcc2->sample_fmt = pAudioCodecCtx->sample_fmt;
+        pcc2->sample_aspect_ratio = pAudioCodecCtx->sample_aspect_ratio;
+        
+        if(pAudioCodecCtx->extradata_size!=0)
+        {
+            pcc2->extradata = malloc(sizeof(uint8_t)*pAudioCodecCtx->extradata_size);
+            memcpy(pcc2->extradata, pAudioCodecCtx->extradata, pAudioCodecCtx->extradata_size);
+            pcc2->extradata_size = pAudioCodecCtx->extradata_size;
+        }
+    }
+#endif
     
     if(fc->oformat->flags & AVFMT_GLOBALHEADER)
     {

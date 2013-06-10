@@ -39,6 +39,9 @@
 @property (nonatomic, retain) VideoFrameExtractor *video;
 @property (retain, nonatomic) IBOutlet UIButton *RecordButton;
 @property (retain, nonatomic) IBOutlet UIButton *SnapShotButton;
+@property (retain, nonatomic) IBOutlet UILabel *RecordProgressLevel;
+@property (nonatomic) int vRecordSeconds;
+
 
 -(IBAction)playButtonAction:(id)sender;
 - (IBAction)showTime:(id)sender;

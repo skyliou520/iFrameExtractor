@@ -27,12 +27,10 @@
 #include "H264_Save.h"
 // 20130525 albert.liao modified end
 
-#define RECORDING_AT_RTSP_START 0
-//#define RECORDING_AT_RTSP_START 1
 
 @implementation iFrameExtractorAppDelegate
 
-@synthesize window, imageView, label, playButton, video;
+@synthesize window, imageView, label, playButton, video, RecordProgressLevel, vRecordSeconds;
 
 - (void)dealloc {
 	[video release];
@@ -42,6 +40,7 @@
     [window release];
     [_RecordButton release];
     [_SnapShotButton release];
+    [RecordProgressLevel release];
     [super dealloc];
 }
 
@@ -49,9 +48,9 @@
 
     // 20130524 albert.liao modified start
     // The test file url is http://http://mm2.pcslab.com/mm/
-//    self.video = [[VideoFrameExtractor alloc] initWithVideo:[Utilities bundlePath:@"7h800.mp4"]];
-//	self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h800.mp4"];
-    self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h1500.mp4"];
+//    self.video = [[VideoFrameExtractor alloc] initWithVideo:[Utilities bundlePath:@"7h800-2.mp4"]];
+	self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h800.mp4"];
+//    self.video = [[VideoFrameExtractor alloc] initWithVideo:@"rtsp://mm2.pcslab.com/mm/7h1500.mp4"];
     
     // 20130524 albert.liao modified end
     [video release];
@@ -64,10 +63,21 @@
 	NSLog(@"video duration: %f",video.duration);
 	NSLog(@"video size: %d x %d", video.sourceWidth, video.sourceHeight);
 	
+    // set the initial value to progress level
+    [RecordProgressLevel setHidden:YES];
+    
 	// video images are landscape, so rotate image view 90 degrees
 	[imageView setTransform:CGAffineTransformMakeRotation(M_PI/2)];
     [window makeKeyAndVisible];
 }
+
+#if RECORDING_AT_RTSP_START==1
+-(void)StopRecording:(NSTimer *)timer {
+    self.video.veVideoRecordState = eH264RecClose;
+    NSLog(@"eH264RecClose");
+    [timer invalidate];
+}
+#endif
 
 -(IBAction)playButtonAction:(id)sender {
 	[playButton setEnabled:NO];
@@ -104,31 +114,6 @@
     self.video.bSnapShot = YES;
 }
 
--(void)StopRecording:(NSTimer *)timer {
-    self.video.veVideoRecordState = eH264RecClose;
-    NSLog(@"eH264RecClose");
-    [timer invalidate];
-}
-
-
-- (IBAction)RecordButtionAction:(id)sender {
-    self.video.veVideoRecordState = eH264RecInit;
-    
-//	self.video.RecordingTimer = [NSTimer scheduledTimerWithTimeInterval:5.0//2.0
-//									 target:self
-//								   selector:@selector(StopRecording:)
-//								   userInfo:nil
-//									repeats:NO];
-#if 0
-	self.video.RecordingTimer = [NSTimer timerWithTimeInterval:5.0//2.0
-                                                                 target:self
-                                                               selector:@selector(StopRecording:)
-                                                               userInfo:nil
-                                                                repeats:NO];
-#endif
-}
-// 20130524 albert.liao modified end
-
 
 #define LERP(A,B,C) ((A)*(1.0-C)+(B)*C)
 
@@ -148,5 +133,44 @@
 	}
 	[label setText:[NSString stringWithFormat:@"%.0f",lastFrameTime]];
 }
+
+
+#pragma mark - ffmpeg usage
+-(void)UpdateProgressLevel:(NSTimer *)timer {
+    NSLog(@"RecordProgress:%d", vRecordSeconds);
+    
+    if(vRecordSeconds==0)
+    {
+        self.video.veVideoRecordState = eH264RecClose;
+        [RecordProgressLevel setHidden:YES];
+        [timer invalidate];
+    }
+    else
+    {
+        vRecordSeconds--;
+    }
+    NSString *vpTmp = [NSString stringWithFormat:@"Recording 00:%02d", vRecordSeconds];
+    [RecordProgressLevel setText:vpTmp];
+    
+}
+
+- (IBAction)RecordButtionAction:(id)sender {
+    self.video.veVideoRecordState = eH264RecInit;
+    
+    // Update the recording progress
+    vRecordSeconds = RECPRDING_SECONDS;
+    NSString *vpTmp = [NSString stringWithFormat:@"Recording 00:%02d", vRecordSeconds];
+    [RecordProgressLevel setText:vpTmp];
+    
+    [RecordProgressLevel setHidden:NO];
+    
+	[NSTimer scheduledTimerWithTimeInterval:1.0
+									 target:self
+								   selector:@selector(UpdateProgressLevel:)
+								   userInfo:nil
+									repeats:YES];
+}
+// 20130524 albert.liao modified end
+
 
 @end

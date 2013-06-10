@@ -9,6 +9,7 @@
 #import "VideoFrameExtractor.h"
 #import "Utilities.h"
 #import <AssetsLibrary/AssetsLibrary.h>
+
 @interface VideoFrameExtractor (private)
 -(void)convertFrameToRGB;
 -(UIImage *)imageFromAVPicture:(AVPicture)pict width:(int)width height:(int)height;
@@ -17,6 +18,9 @@
 @end
 
 @implementation VideoFrameExtractor
+
+#define RECORDING_AT_RTSP_START 0
+//#define RECORDING_AT_RTSP_START 1
 
 @synthesize outputWidth, outputHeight;
 
@@ -123,7 +127,7 @@
 -(id)initWithVideo:(NSString *)moviePath {
 	if (!(self=[super init])) return nil;
  
-    AVCodec         *pCodec, *pCodecAudio;
+    AVCodec         *pCodec, *pAudioCodec;
 		
     // Register all formats and codecs
     avcodec_register_all();
@@ -155,15 +159,10 @@
         av_log(NULL, AV_LOG_ERROR, "Cannot find a video stream in the input file\n");
         goto initError;
     }
-	
-    if ((audioStream =  av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, &pCodecAudio, 0)) < 0) {
-        av_log(NULL, AV_LOG_ERROR, "Cannot find a video stream in the input file\n");
-        goto initError;
-    }
     
     // Get a pointer to the codec context for the video stream
     pCodecCtx = pFormatCtx->streams[videoStream]->codec;
-    
+        
     // Find the decoder for the video stream
     pCodec = avcodec_find_decoder(pCodecCtx->codec_id);
     if(pCodec == NULL) {
@@ -177,6 +176,27 @@
         goto initError;
     }
 	
+    if ((audioStream =  av_find_best_stream(pFormatCtx, AVMEDIA_TYPE_AUDIO, -1, -1, &pAudioCodec, 0)) < 0) {
+        av_log(NULL, AV_LOG_ERROR, "Cannot find a video stream in the input file\n");
+    }
+    else
+    {
+        pAudioCodecCtx = pFormatCtx->streams[audioStream]->codec;
+        
+        // Find the decoder for the audio stream
+        pAudioCodec = avcodec_find_decoder(pAudioCodecCtx->codec_id);
+        if(pAudioCodec == NULL) {
+            av_log(NULL, AV_LOG_ERROR, "Unsupported codec!\n");
+            goto initError;
+        }
+        
+        // Open codec
+        if(avcodec_open2(pAudioCodecCtx, pAudioCodec, NULL) < 0) {
+            av_log(NULL, AV_LOG_ERROR, "Cannot open audio decoder\n");
+            goto initError;
+        }
+    }
+    
     // Allocate video frame
     pFrame = avcodec_alloc_frame();
 			
@@ -251,36 +271,28 @@ initError:
 	// AVPacket packet;
     int frameFinished=0;
     static bool bFirstIFrame=false;
-
+    static int64_t vPTS=0, vDTS=0, vAudioPTS=0, vAudioDTS=0;
+    
     while(!frameFinished && av_read_frame(pFormatCtx, &packet)>=0) {
         // Is this a packet from the video stream?
         if(packet.stream_index==videoStream) {
             
-            
             // 20130525 albert.liao modified start
-//            fprintf(stderr, "packet len=%d, Byte=%02X%02X%02X%02X%02X%02X%02X%02X, State=%d\n",\
-                    packet.size, packet.data[0],packet.data[1],packet.data[2],packet.data[3], packet.data[4],packet.data[5],packet.data[6],packet.data[7],veVideoRecordState);
             
-            // Decode video frame
-            avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
-        
-
-
             // Initialize a new format context for writing file
             if(veVideoRecordState!=eH264RecIdle)
             {
                 switch(veVideoRecordState)
                 {
                     case eH264RecInit:
-                    {
+                    {                        
                         if ( !pFormatCtx_Record )
                         {
                             int bFlag = 0;
                             NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
-//                            NSString *videoPath = [NSHomeDirectory() stringByAppendingPathComponent:@"Documents/test.mp4"];
                             const char *file = [videoPath UTF8String];
                             pFormatCtx_Record = avformat_alloc_context();
-                            bFlag = h264_file_create(file, pFormatCtx_Record, pCodecCtx,/*fps*/0.0, packet.data, packet.size );
+                            bFlag = h264_file_create(file, pFormatCtx_Record, pCodecCtx, pAudioCodecCtx,/*fps*/0.0, packet.data, packet.size );
                             
                             if(bFlag==true)
                             {
@@ -298,9 +310,11 @@ initError:
                         
                     case eH264RecActive:
                     {
-                        if((packet.flags&AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
+                        if((bFirstIFrame==false) &&(packet.flags&AV_PKT_FLAG_KEY)==AV_PKT_FLAG_KEY)
                         {
-                            bFirstIFrame=TRUE;
+                            bFirstIFrame=true;
+                            vPTS = packet.pts ;
+                            vDTS = packet.dts ;
 #if 0
                             NSRunLoop *pRunLoop = [NSRunLoop currentRunLoop];
                             [pRunLoop addTimer:RecordingTimer forMode:NSDefaultRunLoopMode];
@@ -314,15 +328,18 @@ initError:
                         }
                         
                         // Record audio when 1st i-Frame is obtained
-                        if(bFirstIFrame==TRUE)
+                        if(bFirstIFrame==true)
                         {
-
-                            
-
-                            
                             if ( pFormatCtx_Record )
                             {
-                                h264_file_write_frame( pFormatCtx_Record, packet.data, packet.size, packet.dts, packet.pts);
+#if PTS_DTS_IS_CORRECT==1
+                                packet.pts = packet.pts - vPTS;
+                                packet.dts = packet.dts - vDTS;
+                                                                                       
+#endif
+//                                h264_file_write_frame2( pFormatCtx_Record, packet.stream_index, &packet);
+                                    h264_file_write_frame( pFormatCtx_Record, packet.stream_index, packet.data, packet.size, packet.dts, packet.pts);
+
                             }
                             else
                             {
@@ -337,7 +354,7 @@ initError:
                         if ( pFormatCtx_Record )
                         {
                             h264_file_close(pFormatCtx_Record);
-                            
+#if 0
                             // 20130607 Test
                             dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^(void)
                             {
@@ -358,7 +375,11 @@ initError:
                                 }
                                 [library release];
                             });
-                            
+#endif
+                            vPTS = 0;
+                            vDTS = 0;
+                            vAudioPTS = 0;
+                            vAudioDTS = 0;
                             pFormatCtx_Record = NULL;
                             NSLog(@"h264_file_close() is finished");
                         }
@@ -368,8 +389,6 @@ initError:
                         }
                         bFirstIFrame = false;
                         veVideoRecordState = eH264RecIdle;
-                        
-                        
                         
                     }
                     break;
@@ -385,10 +404,36 @@ initError:
                         break;
                 }
             }
+            
+            // Decode video frame
+            avcodec_decode_video2(pCodecCtx, pFrame, &frameFinished, &packet);
         }
         else if(packet.stream_index==audioStream)
         {
-            ;
+            // TODO
+#if SUPPORT_AUDIO_RECORDING==1
+            if(bFirstIFrame==true)
+            {
+                if ( pFormatCtx_Record )
+                {
+#if 1
+                    if(vAudioPTS==0)
+                        vAudioPTS=packet.pts;
+                    if(vAudioDTS==0)
+                        vAudioDTS=packet.dts;
+                    
+                    packet.pts = packet.pts - vAudioPTS;
+                    packet.dts = packet.dts - vAudioDTS;
+#endif
+                    h264_file_write_frame( pFormatCtx_Record, packet.stream_index, packet.data, packet.size, packet.dts, packet.pts);
+                    
+                }
+                else
+                {
+                    NSLog(@"pFormatCtx_Record no exist");
+                }
+            }
+#endif
         }
         else
         {
