@@ -49,6 +49,7 @@
 	double duration;
     double currentTime;
     
+    // marked by test 
     // 20130524 albert.liao modified start
     AVFormatContext *pFormatCtx_Record;
     AVCodecContext *pAudioCodecCtx;
